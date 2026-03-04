@@ -31,7 +31,7 @@ import { JobsModule } from './jobs/jobs.module';
         password: config.get('database.password'),
         database: config.get('database.name'),
         entities: [Address, Transaction, TokenBalance, Alert],
-        synchronize: true,
+        synchronize: process.env.NODE_ENV !== 'production',
       }),
     }),
     BullModule.forRootAsync({
