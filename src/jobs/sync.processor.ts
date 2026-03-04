@@ -64,11 +64,17 @@ export class SyncProcessor extends WorkerHost {
       const fromBlock = lastTx ? lastTx.blockNumber + 1 : 0;
       const txs = await this.blockchainService.getTransactions(address.address, fromBlock);
 
-      // Fetch existing hashes in one query to avoid N+1 pattern
-      const existingHashes = new Set(
-        (await this.transactionRepository.find({ where: { addressId }, select: ['hash'] }))
-          .map((t) => t.hash),
-      );
+      // Check only the hashes from the current batch to avoid loading all history
+      const batchHashes = txs.map((t) => t.hash);
+      const existing = batchHashes.length
+        ? await this.transactionRepository
+            .createQueryBuilder('tx')
+            .select('tx.hash')
+            .where('tx.addressId = :addressId', { addressId })
+            .andWhere('tx.hash IN (:...hashes)', { hashes: batchHashes })
+            .getMany()
+        : [];
+      const existingHashes = new Set(existing.map((t) => t.hash));
 
       for (const tx of txs) {
         if (existingHashes.has(tx.hash)) continue;
