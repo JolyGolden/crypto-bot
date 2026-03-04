@@ -31,7 +31,9 @@ export class TokenBalance {
   @Column()
   addressId: string;
 
-  @ManyToOne(() => Address, (addr) => addr.tokenBalances)
+  @ManyToOne(() => Address, (addr) => addr.tokenBalances, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'addressId' })
   address: Address;
 

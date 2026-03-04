@@ -18,7 +18,13 @@ export class AlertsService {
   async createAlert(addressId: string, type: string, message: string): Promise<Alert> {
     const alert = this.alertRepository.create({ addressId, type, message });
     const saved = await this.alertRepository.save(alert);
-    await this.sendTelegram(message);
+    const isSent = await this.sendTelegram(message);
+
+    if (isSent) {
+      await this.alertRepository.update(saved.id, { isSent: true });
+      saved.isSent = true;
+    }
+
     return saved;
   }
 
@@ -33,17 +39,22 @@ export class AlertsService {
     });
   }
 
-  private async sendTelegram(message: string): Promise<void> {
+  private async sendTelegram(message: string): Promise<boolean> {
     const botToken = this.configService.get<string>('telegram.botToken');
     const chatId = this.configService.get<string>('telegram.chatId');
-    if (!botToken || !chatId) return;
+    if (!botToken || !chatId) {
+      return false;
+    }
+
     try {
       await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         chat_id: chatId,
         text: message,
       });
+      return true;
     } catch (err) {
       this.logger.error('Failed to send Telegram message', err);
+      return false;
     }
   }
 }

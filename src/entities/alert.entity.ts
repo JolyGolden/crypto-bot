@@ -16,7 +16,9 @@ export class Alert {
   @Column()
   addressId: string;
 
-  @ManyToOne(() => Address, (addr) => addr.alerts)
+  @ManyToOne(() => Address, (addr) => addr.alerts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'addressId' })
   address: Address;
 

@@ -43,7 +43,9 @@ export class Transaction {
   @Column()
   addressId: string;
 
-  @ManyToOne(() => Address, (addr) => addr.transactions)
+  @ManyToOne(() => Address, (addr) => addr.transactions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'addressId' })
   address: Address;
 
