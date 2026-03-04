@@ -11,11 +11,13 @@ It is intentionally execution-oriented and can be used as a lightweight backlog.
   - add `users` schema,
   - add `userId` on wallets,
   - use composite uniqueness `(userId, chain, address)`,
-  - keep a temporary default-user bridge until auth exists
+  - keep a temporary default-user bridge until auth exists,
+  - route read access through a current-user boundary instead of raw wallet IDs
 - Done when:
   - database supports user-owned wallets,
   - current CRUD still works in single-user mode,
-  - migration path exists
+  - transaction and alert reads no longer bypass ownership checks,
+  - the remaining gap is real authentication, not global data access
 
 ## Card 2: Defer Migrations Until The Schema Stabilizes
 
@@ -32,7 +34,7 @@ It is intentionally execution-oriented and can be used as a lightweight backlog.
 
 ## Card 3: Add API Versioning And Health Endpoint
 
-- Status: planned
+- Status: completed
 - Goal: align HTTP surface with the target contract baseline
 - Scope:
   - add `/v1` global prefix,

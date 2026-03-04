@@ -5,9 +5,15 @@ jest.mock('axios');
 
 describe('AlertsService', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
+  const addressesService = {
+    findAll: jest.fn().mockResolvedValue([{ id: 'addr-1' }]),
+    findOne: jest.fn().mockResolvedValue({ id: 'addr-1' }),
+  };
 
   afterEach(() => {
     jest.clearAllMocks();
+    addressesService.findAll.mockResolvedValue([{ id: 'addr-1' }]);
+    addressesService.findOne.mockResolvedValue({ id: 'addr-1' });
   });
 
   it('should mark alerts as sent after a successful Telegram request', async () => {
@@ -29,6 +35,7 @@ describe('AlertsService', () => {
     const service = new AlertsService(
       alertRepository as any,
       configService as any,
+      addressesService as any,
     );
 
     const result = await service.createAlert('addr-1', 'new_transaction', 'hello');
@@ -53,6 +60,7 @@ describe('AlertsService', () => {
     const service = new AlertsService(
       alertRepository as any,
       configService as any,
+      addressesService as any,
     );
 
     const result = await service.createAlert('addr-1', 'new_transaction', 'hello');
@@ -60,5 +68,27 @@ describe('AlertsService', () => {
     expect(mockedAxios.post).not.toHaveBeenCalled();
     expect(alertRepository.update).not.toHaveBeenCalled();
     expect(result.isSent).toBe(false);
+  });
+
+  it('should scope findAll to the current user addresses', async () => {
+    const alertRepository = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+    const configService = {
+      get: jest.fn(),
+    };
+    addressesService.findAll.mockResolvedValue([{ id: 'addr-1' }, { id: 'addr-2' }]);
+    const service = new AlertsService(
+      alertRepository as any,
+      configService as any,
+      addressesService as any,
+    );
+
+    await service.findAll();
+
+    expect(alertRepository.find).toHaveBeenCalledWith({
+      where: { addressId: expect.anything() },
+      order: { createdAt: 'DESC' },
+    });
   });
 });

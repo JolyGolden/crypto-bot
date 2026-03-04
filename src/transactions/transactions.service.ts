@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AddressesService } from '../addresses/addresses.service';
 import { Transaction } from '../entities/transaction.entity';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 
@@ -9,9 +10,11 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    private readonly addressesService: AddressesService,
   ) {}
 
   async findByAddress(addressId: string, query: TransactionQueryDto) {
+    await this.addressesService.findOne(addressId);
     const { page = 1, limit = 20 } = query;
     const [transactions, total] = await this.transactionRepository.findAndCount({
       where: { addressId },

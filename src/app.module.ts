@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { User } from './entities/user.entity';
 import { Address } from './entities/address.entity';
 import { Transaction } from './entities/transaction.entity';
@@ -17,6 +19,7 @@ import { BlockchainModule } from './blockchain/blockchain.module';
 import { JobsModule } from './jobs/jobs.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
@@ -52,5 +55,6 @@ import { JobsModule } from './jobs/jobs.module';
     BlockchainModule,
     JobsModule,
   ],
+  providers: [AppService],
 })
 export class AppModule {}

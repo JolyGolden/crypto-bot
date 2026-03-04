@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Alert } from '../entities/alert.entity';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { AddressesService } from '../addresses/addresses.service';
 
 @Injectable()
 export class AlertsService {
@@ -13,6 +14,7 @@ export class AlertsService {
     @InjectRepository(Alert)
     private readonly alertRepository: Repository<Alert>,
     private readonly configService: ConfigService,
+    private readonly addressesService: AddressesService,
   ) {}
 
   async createAlert(addressId: string, type: string, message: string): Promise<Alert> {
@@ -29,10 +31,21 @@ export class AlertsService {
   }
 
   async findAll(): Promise<Alert[]> {
-    return this.alertRepository.find({ order: { createdAt: 'DESC' } });
+    const addresses = await this.addressesService.findAll();
+    if (!addresses.length) {
+      return [];
+    }
+
+    const addressIds = addresses.map((address) => address.id);
+
+    return this.alertRepository.find({
+      where: { addressId: In(addressIds) },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findByAddress(addressId: string): Promise<Alert[]> {
+    await this.addressesService.findOne(addressId);
     return this.alertRepository.find({
       where: { addressId },
       order: { createdAt: 'DESC' },

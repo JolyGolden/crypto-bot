@@ -22,8 +22,8 @@ It is still materially behind the target architecture in ownership, data modelin
 | --- | --- | --- | --- |
 | Repository topology | Single NestJS app in `src/` | Nx monorepo with `apps/api`, `apps/worker`, `apps/mobile`, shared packages | No workspace split and no mobile app |
 | Runtime processes | API, scheduler, and worker logic live in one app process | Separate API and worker processes or containers | No process isolation for jobs |
-| API namespace | Routes are unversioned, Swagger is at `/api` | Base path `/v1`, docs at `/docs`, plus `/health` | Missing versioning and health endpoint |
-| Authentication | No auth, no user model | Telegram linking, JWT sessions, per-user ownership | No identity or access boundary |
+| API namespace | API routes are versioned under `/v1`, Swagger is at `/docs`, and `/health` exists outside the prefix | Base path `/v1`, docs at `/docs`, plus `/health` | Main remaining gap is the unified error envelope and the rest of the target endpoint shape |
+| Authentication | No real auth yet, but a current-user boundary exists through a default-user bridge and `UsersService` | Telegram linking, JWT sessions, per-user ownership | No real identity or session model yet |
 | Wallet ownership | `Address` is global and unique by address only | `Wallet` belongs to `User`, unique by `(user_id, chain, address)` | No multi-user model |
 | Wallet lifecycle | Create, list, get, delete only | Add, list, patch label or `isActive`, soft delete | No patch API and no soft delete flow |
 | Chain model | `chain` field exists, but sync is effectively Polygon-only | Polygon-first with explicit chain adapter boundary | Chain field is not yet a real adapter input |
@@ -43,7 +43,7 @@ It is still materially behind the target architecture in ownership, data modelin
 
 What already exists in the code:
 
-- NestJS app bootstrap with Swagger and global validation.
+- NestJS app bootstrap with `/v1`, `/docs`, `/health`, Swagger, and global validation.
 - Postgres integration through TypeORM.
 - Redis integration through BullMQ.
 - Scheduled sync every 5 minutes for active addresses.
@@ -52,7 +52,7 @@ What already exists in the code:
 
 ## Current Risks Relative To The Plan
 
-- The application has no user boundary, so all tracked wallets are effectively global.
+- The application still has no real identity model; it uses a temporary default-user bridge instead.
 - Alert delivery still bypasses the planned outbox and sender worker model.
 - There is no durable sync cursor model, so reorg-safe syncing is not implemented.
 - Portfolio reads are current-state only and do not match the planned snapshot design.

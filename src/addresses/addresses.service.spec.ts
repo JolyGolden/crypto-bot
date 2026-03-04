@@ -4,15 +4,19 @@ import { Address } from '../entities/address.entity';
 import { Alert } from '../entities/alert.entity';
 import { TokenBalance } from '../entities/token-balance.entity';
 import { Transaction } from '../entities/transaction.entity';
-import { User } from '../entities/user.entity';
 
 describe('AddressesService', () => {
-  const configService = {
-    get: jest.fn().mockReturnValue('00000000-0000-0000-0000-000000000001'),
+  const usersService = {
+    getOrCreateCurrentUserId: jest
+      .fn()
+      .mockResolvedValue('00000000-0000-0000-0000-000000000001'),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    usersService.getOrCreateCurrentUserId.mockResolvedValue(
+      '00000000-0000-0000-0000-000000000001',
+    );
   });
 
   it('should translate unique constraint violations into ConflictException', async () => {
@@ -20,19 +24,13 @@ describe('AddressesService', () => {
       create: jest.fn((dto) => dto),
       save: jest.fn().mockRejectedValue({ code: '23505' }),
     };
-    const userRepository = {
-      exist: jest.fn().mockResolvedValue(true),
-      save: jest.fn(),
-      create: jest.fn((dto) => dto),
-    };
     const dataSource = {
       transaction: jest.fn(),
     };
     const service = new AddressesService(
       addressRepository as any,
-      userRepository as any,
       dataSource as any,
-      configService as any,
+      usersService as any,
     );
 
     await expect(
@@ -51,11 +49,6 @@ describe('AddressesService', () => {
     const addressRepository = {
       findOne: jest.fn().mockResolvedValue({ id: 'addr-1' } as Address),
     };
-    const userRepository = {
-      exist: jest.fn().mockResolvedValue(true),
-      save: jest.fn(),
-      create: jest.fn((dto) => dto),
-    };
     const dataSource = {
       transaction: jest
         .fn()
@@ -65,9 +58,8 @@ describe('AddressesService', () => {
     };
     const service = new AddressesService(
       addressRepository as any,
-      userRepository as any,
       dataSource as any,
-      configService as any,
+      usersService as any,
     );
 
     await service.remove('addr-1');
@@ -90,34 +82,25 @@ describe('AddressesService', () => {
     });
   });
 
-  it('should create the default user and persist scoped addresses', async () => {
+  it('should persist scoped addresses for the current user', async () => {
     const addressRepository = {
       create: jest.fn((dto) => dto),
       save: jest.fn().mockImplementation(async (entity) => entity),
-    };
-    const userRepository = {
-      exist: jest.fn().mockResolvedValue(false),
-      save: jest.fn().mockResolvedValue({ id: '00000000-0000-0000-0000-000000000001' } as User),
-      create: jest.fn((dto) => dto),
     };
     const dataSource = {
       transaction: jest.fn(),
     };
     const service = new AddressesService(
       addressRepository as any,
-      userRepository as any,
       dataSource as any,
-      configService as any,
+      usersService as any,
     );
 
     const result = await service.create({
       address: '0xABCDEFabcdefABCDEFabcdefABCDEFabcdefABCD',
     });
 
-    expect(userRepository.save).toHaveBeenCalledWith({
-      id: '00000000-0000-0000-0000-000000000001',
-      status: 'active',
-    });
+    expect(usersService.getOrCreateCurrentUserId).toHaveBeenCalled();
     expect(addressRepository.create).toHaveBeenCalledWith({
       address: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
       userId: '00000000-0000-0000-0000-000000000001',
