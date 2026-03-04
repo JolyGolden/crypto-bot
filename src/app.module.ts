@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
+import { User } from './entities/user.entity';
 import { Address } from './entities/address.entity';
 import { Transaction } from './entities/transaction.entity';
 import { TokenBalance } from './entities/token-balance.entity';
@@ -30,8 +31,8 @@ import { JobsModule } from './jobs/jobs.module';
         username: config.get('database.user'),
         password: config.get('database.password'),
         database: config.get('database.name'),
-        entities: [Address, Transaction, TokenBalance, Alert],
-        synchronize: process.env.NODE_ENV !== 'production',
+        entities: [User, Address, Transaction, TokenBalance, Alert],
+        synchronize: config.get('database.synchronize'),
       }),
     }),
     BullModule.forRootAsync({

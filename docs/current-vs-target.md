@@ -28,7 +28,7 @@ It is still materially behind the target architecture in ownership, data modelin
 | Wallet lifecycle | Create, list, get, delete only | Add, list, patch label or `isActive`, soft delete | No patch API and no soft delete flow |
 | Chain model | `chain` field exists, but sync is effectively Polygon-only | Polygon-first with explicit chain adapter boundary | Chain field is not yet a real adapter input |
 | Data model | `addresses`, `transactions`, `token_balances`, `alerts` only | Users, sessions, sync state, snapshots, transfers, rules, outbox | Core planned tables are missing |
-| Database lifecycle | TypeORM `synchronize` is used outside prod | Explicit migrations and schema versioning | No migration discipline |
+| Database lifecycle | TypeORM `synchronize` is intentionally still used in early development | Explicit migrations and schema versioning once the schema stabilizes | Migration discipline is intentionally deferred |
 | Sync state | Last synced block is inferred from stored tx rows | Dedicated `wallet_sync_state` table with cursor, confirmations, reorg window | No robust sync cursor model |
 | Portfolio storage | Portfolio reads live native balance from RPC and token rows from current table | Snapshot-based portfolio read model with USD totals and time anchors | No snapshot history or aggregate totals |
 | Transaction ingestion | Native tx history only, no token transfer table | Native tx plus token transfers and richer categorization | ERC-20 transfer detail is incomplete |
@@ -60,8 +60,9 @@ What already exists in the code:
 
 ## Suggested Next Technical Sequence
 
-1. Introduce migrations and the user-owned wallet schema before expanding more endpoints.
+1. Finish the user-owned wallet schema and keep `synchronize` for rapid iteration until the core model stops moving.
 2. Add `/v1` prefixing, `/health`, and an explicit API error envelope.
 3. Add `wallet_sync_state` and move sync progression out of ad hoc block inference.
-4. Replace direct Telegram sends with `alert_rules`, `alert_events`, and `notification_outbox`.
-5. Split worker responsibilities from the HTTP process once the queue contract stabilizes.
+4. Reintroduce migrations once the wallet, auth, and sync-state schema are stable enough to version.
+5. Replace direct Telegram sends with `alert_rules`, `alert_events`, and `notification_outbox`.
+6. Split worker responsibilities from the HTTP process once the queue contract stabilizes.

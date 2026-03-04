@@ -58,6 +58,7 @@ Explicitly out of MVP:
 - [Operations](./operations.md): reliability rules, deployment checklist, monitoring, and runbook.
 - [Vendors](./vendors.md): provider comparison, cost notes, and external dependency guidance.
 - [Roadmap](./roadmap.md): staged implementation plan and illustrative timeline.
+- [Task Cards](./task-cards.md): execution-oriented implementation cards derived from the technical gap.
 - [Current vs Target](./current-vs-target.md): technical gap analysis against the code currently in this repository.
 
 ## How To Use This Documentation
